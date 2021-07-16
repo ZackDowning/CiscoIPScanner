@@ -2,6 +2,12 @@ from ipaddress import IPv4Network
 from general import mt
 import time
 
+# TODO: Clean up scan
+# TODO: Add check to see if interface already exists on ios and nxos for source vlan
+# TODO: Check to make sure vlan exists in vlan db
+# TODO: break down Scan class
+# TODO: move exceptions to seperate file
+
 
 class InvalidVRF(Exception):
     pass
