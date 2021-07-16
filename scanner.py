@@ -186,8 +186,8 @@ class Scan:
                     reachable_device for reachable_device in self.reachable_devices
                     if host['address'] == reachable_device
             ):
-                host['Status'] = 'Reachable'
+                host['status'] = 'Reachable'
             else:
-                host['Status'] = 'Unreachable'
+                host['status'] = 'Unreachable'
 
         mt(sort, self.all_hosts)

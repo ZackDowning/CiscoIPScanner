@@ -16,9 +16,23 @@ networks = [
 
 vlans = ['18', '20', '21', '22', '23', '192', '253', '2001', '2004']
 
-for network in networks:
-    n = network.split('.')
-    intf_ip = f'{n[0]}.{n[1]}.{n[2]}.3'
+with open('netscan.csv', 'w+') as file:
+    file.write(
+        'ip_address,mac_address,status,vlan\n'
+    )
     for vlan in vlans:
-        connection = Connection(mgmt_ip, username, password, devicetype)
-        all_hosts = Scan(network, devicetype, vlan, connection, True, intf_ip).all_hosts
+        for network in networks:
+            n = network.split('.')
+            intf_ip = f'{n[0]}.{n[1]}.{n[2]}.3'
+            connection = Connection(mgmt_ip, username, password, devicetype)
+            all_hosts = Scan(network, devicetype, vlan, connection, True, intf_ip).all_hosts
+            for host in all_hosts:
+                address = host['address']
+                try:
+                    mac = host['mac']
+                except KeyError:
+                    mac = ''
+                status = host['status']
+                file.write(
+                    f'{address},{mac},{status},{vlan}\n'
+                )
