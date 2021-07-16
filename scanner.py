@@ -1,5 +1,6 @@
 from ipaddress import IPv4Network
 from general import mt
+import exceptions as e
 import time
 
 # TODO: Clean up scan
@@ -7,34 +8,7 @@ import time
 # TODO: Check to make sure vlan exists in vlan db
 # TODO: break down Scan class
 # TODO: move exceptions to seperate file
-
-
-class InvalidVRF(Exception):
-    pass
-
-
-class NoVRFSpecifiedWithIntInVRF(Exception):
-    pass
-
-
-class InvalidIntf(Exception):
-    pass
-
-
-class InvalidDeviceType(Exception):
-    pass
-
-
-class NoIntfIPSpecified(Exception):
-    pass
-
-
-class NoNXOSIntfIPSpecified(Exception):
-    pass
-
-
-class SubnetTooLarge(Exception):
-    pass
+# TODO: Add check to make sure provided intf ip address is within subnet to scan for
 
 
 class Scan:
@@ -50,11 +24,11 @@ class Scan:
 
         # Intf IP required if creating interface
         if create_intf and intf_ip is None:
-            raise NoIntfIPSpecified
+            raise e.NoIntfIPSpecified
 
         # Intf IP required if NXOS
         if devicetype == 'cisco_nxos' and intf_ip is None:
-            raise NoNXOSIntfIPSpecified
+            raise e.NoNXOSIntfIPSpecified
 
         network = IPv4Network(network)
 
@@ -103,25 +77,25 @@ class Scan:
                 else:
                     cmd = f'ping {ip_address} vrf {vrf} count {count} timeout {timeout} source {intf_ip}'
             else:
-                raise InvalidDeviceType
+                raise e.InvalidDeviceType
             cmd_output = conn.send_command(cmd)
             # return cmd_output
             if cmd_output.__contains__('Invalid'):
                 if self.devicetype == 'cisco_ios':
                     if cmd_output.__contains__(
                             'Invalid source interface - Interface vrf does not match the vrf used for ping'):
-                        raise NoVRFSpecifiedWithIntInVRF
+                        raise e.NoVRFSpecifiedWithIntInVRF
                     if cmd_output.__contains__('does not exist'):
-                        raise InvalidVRF
+                        raise e.InvalidVRF
                     if cmd_output.__contains__('input detected'):
-                        raise InvalidIntf
+                        raise e.InvalidIntf
                 else:
                     if cmd_output.__contains__('bind to address'):
-                        raise NoVRFSpecifiedWithIntInVRF
+                        raise e.NoVRFSpecifiedWithIntInVRF
                     if cmd_output.__contains__('does not exist'):
-                        raise InvalidVRF
+                        raise e.InvalidVRF
                     if cmd_output.__contains__('Invalid host/interface'):
-                        raise InvalidIntf
+                        raise e.InvalidIntf
             else:
                 if self.devicetype == 'cisco_ios':
                     try:
@@ -172,7 +146,7 @@ class Scan:
                 self.all_hosts[408:458], self.all_hosts[459:509]
             ]
         else:
-            raise SubnetTooLarge
+            raise e.SubnetTooLarge
 
         def host_split(host_list):
             session1 = connection.connection().session
