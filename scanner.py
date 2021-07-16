@@ -7,7 +7,6 @@ import time
 # TODO: Add check to see if interface already exists on ios and nxos for source vlan
 # TODO: Check to make sure vlan exists in vlan db
 # TODO: break down Scan class
-# TODO: move exceptions to seperate file
 # TODO: Add check to make sure provided intf ip address is within subnet to scan for
 
 
@@ -39,7 +38,7 @@ class Scan:
                     f'interface vlan {source_vlan}',
                     f'ip address {intf_ip} {network.netmask}',
                     'no shut',
-                    'copy run start'
+                    'do wr'
                 ])
             else:
                 if devicetype == 'cisco_nxos':
@@ -51,7 +50,7 @@ class Scan:
                     vrf_cmd,
                     f'ip address {intf_ip} {network.netmask}',
                     'no shut',
-                    'copy run start'
+                    'do wr'
                 ])
 
         hosts_r = network.hosts()
@@ -111,39 +110,39 @@ class Scan:
         prefix = int(network.prefixlen)
         if prefix == 29:
             hosts_lists = [
-                self.all_hosts[0:1], self.all_hosts[2:3], self.all_hosts[4:5]
+                self.all_hosts[0:2], self.all_hosts[2:4], self.all_hosts[4:6]
             ]
         elif prefix == 28:
             hosts_lists = [
-                self.all_hosts[0:1], self.all_hosts[2:3], self.all_hosts[4:5], self.all_hosts[6:7],
-                self.all_hosts[8:9], self.all_hosts[10:11], self.all_hosts[12:13]
+                self.all_hosts[0:2], self.all_hosts[2:4], self.all_hosts[4:6], self.all_hosts[6:8],
+                self.all_hosts[8:10], self.all_hosts[10:12], self.all_hosts[12:14]
             ]
         elif prefix == 27:
             hosts_lists = [
-                self.all_hosts[0:4], self.all_hosts[5:9], self.all_hosts[10:14], self.all_hosts[15:19],
-                self.all_hosts[20:24], self.all_hosts[25:29]
+                self.all_hosts[0:5], self.all_hosts[5:10], self.all_hosts[10:15], self.all_hosts[15:20],
+                self.all_hosts[20:25], self.all_hosts[25:30]
             ]
         elif prefix == 26:
             hosts_lists = [
-                self.all_hosts[0:14], self.all_hosts[15:29], self.all_hosts[30:44], self.all_hosts[45:59],
-                self.all_hosts[60:61]
+                self.all_hosts[0:15], self.all_hosts[15:30], self.all_hosts[30:45], self.all_hosts[45:60],
+                self.all_hosts[60:62]
             ]
         elif prefix == 25:
             hosts_lists = [
-                self.all_hosts[0:17], self.all_hosts[18:35], self.all_hosts[19:53], self.all_hosts[54:71],
-                self.all_hosts[72:89], self.all_hosts[89:107], self.all_hosts[108:125]
+                self.all_hosts[0:18], self.all_hosts[18:36], self.all_hosts[19:54], self.all_hosts[54:72],
+                self.all_hosts[72:90], self.all_hosts[89:108], self.all_hosts[108:126]
             ]
         elif prefix == 24:
             hosts_lists = [
-                self.all_hosts[0:24], self.all_hosts[25:49], self.all_hosts[50:74], self.all_hosts[75:99],
+                self.all_hosts[0:25], self.all_hosts[25:50], self.all_hosts[50:75], self.all_hosts[75:100],
                 self.all_hosts[100:104], self.all_hosts[125:149], self.all_hosts[150:174], self.all_hosts[175:199],
                 self.all_hosts[200:224], self.all_hosts[225:249], self.all_hosts[250:253]
             ]
         elif prefix == 23:
             hosts_lists = [
-                self.all_hosts[0:50], self.all_hosts[51:101], self.all_hosts[102:152], self.all_hosts[103:203],
-                self.all_hosts[204:254], self.all_hosts[255:305], self.all_hosts[306:356], self.all_hosts[357:407],
-                self.all_hosts[408:458], self.all_hosts[459:509]
+                self.all_hosts[0:51], self.all_hosts[51:102], self.all_hosts[102:153], self.all_hosts[103:204],
+                self.all_hosts[204:255], self.all_hosts[255:306], self.all_hosts[306:357], self.all_hosts[357:408],
+                self.all_hosts[408:459], self.all_hosts[459:510]
             ]
         else:
             raise e.SubnetTooLarge
@@ -162,6 +161,11 @@ class Scan:
 
         session = connection.connection().session
         arps = session.send_command(f'show ip arp vlan {source_vlan}', use_textfsm=True)
+
+        # Creates Interface
+        if create_intf and intf_ip is not None:
+            session.send_config_set([f'no interface vlan {source_vlan}', 'do wr'])
+
         session.disconnect()
 
         def append(arp):
