@@ -11,10 +11,9 @@ import time
 
 
 class Scan:
-    def __init__(self, management_ip_address, network, devicetype, source_vlan, connection, create_intf=False,
+    def __init__(self, network, devicetype, source_vlan, connection, create_intf=False,
                  intf_ip=None, vrf=None, count=2, timeout=1):
         self.session = connection.connection().session
-        self.management_ip_address = management_ip_address
         self.network = network
         self.devicetype = devicetype
         self.reachable_devices = []
@@ -163,7 +162,7 @@ class Scan:
         arps = session.send_command(f'show ip arp vlan {source_vlan}', use_textfsm=True)
 
         # Creates Interface
-        if create_intf and intf_ip is not None:
+        if create_intf:
             session.send_config_set([f'no interface vlan {source_vlan}', 'do wr'])
 
         session.disconnect()
