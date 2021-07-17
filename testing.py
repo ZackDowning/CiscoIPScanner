@@ -1,13 +1,13 @@
 import os
 from scanner import Scan
 from general import Connection
-# from progressbar import ProgressBar
+from progressbar import progressbar
 # from pprint import pp
 
 username = os.getenv('USERNAME')
 password = os.getenv('PASSWORD')
-mgmt_ip = '10.39.16.2'
-devicetype = 'cisco_ios'
+mgmt_ip = '10.187.30.2'
+devicetype = 'cisco_nxos'
 
 networks = [
     '10.39.18.0/24', '10.39.20.0/24', '10.39.21.0/24', '10.39.22.0/24', '10.39.23.0/24', '10.39.1.0/24',
@@ -16,14 +16,13 @@ networks = [
 
 vlans = ['18', '20', '21', '22', '23', '192', '253', '2001', '2004']
 
-progress = 0
-
 with open('netscan.csv', 'w+') as file:
     length = len(networks) * len(vlans)
-    # bar = ProgressBar(max_value=length)
     file.write('ip_address,mac_address,status,vlan\n')
-    for vlan in vlans:
-        for network in networks:
+    vlan_bar = progressbar(vlans, prefix='VLANS: ')
+    for vlan in vlan_bar:
+        network_bar = progressbar(networks, prefix='Networks: ')
+        for network in network_bar:
             n = network.split('.')
             intf_ip = f'{n[0]}.{n[1]}.{n[2]}.3'
             connection = Connection(mgmt_ip, username, password, devicetype)
@@ -36,5 +35,3 @@ with open('netscan.csv', 'w+') as file:
                     mac = ''
                 status = host['status']
                 file.write(f'{address},{mac},{status},{vlan}\n')
-            progress += 1
-            # bar.update(progress)

@@ -24,3 +24,23 @@ class NoNXOSIntfIPSpecified(Exception):
 
 class SubnetTooLarge(Exception):
     pass
+
+
+class InvalidVlanID(Exception):
+    pass
+
+
+class InvalidNetworkID(Exception):
+    pass
+
+
+class InvalidInterfaceIP(Exception):
+    pass
+
+
+class InterfaceIPAddressNotInNetwork(Exception):
+    pass
+
+
+class VlanNotInVlanDB(Exception):
+    pass

@@ -1,7 +1,8 @@
-from ipaddress import IPv4Network
+from ipaddress import IPv4Network, AddressValueError
 from general import mt
 import exceptions as e
-import time
+from address_validator import ipv4
+# import time
 
 # TODO: Add check to see if interface already exists on ios and nxos for source vlan
 # TODO: Check to make sure vlan exists in vlan db
@@ -53,13 +54,14 @@ def hosts_lists_parse(prefix, all_hosts):
 class Scan:
     def __init__(self, network, devicetype, source_vlan, connection, create_intf=False,
                  intf_ip=None, vrf=None, count=2, timeout=1):
-        self.session = connection.connection().session
         self.network = network
         self.devicetype = devicetype
         self.reachable_devices = []
         self.devices = []
         self.all_hosts = []
+        session = connection.connection().session
 
+        # Input error checking
         # Intf IP required if creating interface
         if create_intf and intf_ip is None:
             raise e.NoIntfIPSpecified
@@ -68,12 +70,31 @@ class Scan:
         if devicetype == 'cisco_nxos' and intf_ip is None:
             raise e.NoNXOSIntfIPSpecified
 
-        network = IPv4Network(network)
+        if int(source_vlan - 1) not in range(4091):
+            raise e.InvalidVlanID
+
+        # Checks to make sure network is valid
+        try:
+            network = IPv4Network(network)
+            hosts_r = network.hosts()
+        except AddressValueError:
+            raise e.InvalidNetworkID
+
+        # Checks to make sure interface IP address is valid IP address and IP address in within the specific network
+        if intf_ip is not None:
+            if not ipv4(intf_ip):
+                raise e.InvalidInterfaceIP
+            if any(intf_ip != h1 for h1 in hosts_r):
+                raise e.InterfaceIPAddressNotInNetwork
+
+        vlan_db = session.send_command('show vlan brief', use_textfsm=True)
+        if any(source_vlan != v1['vlan_id'] for v1 in vlan_db):
+            raise e.VlanNotInVlanDB
 
         # Creates Interface
         if create_intf and intf_ip is not None:
             if vrf is None:
-                self.session.send_config_set([
+                session.send_config_set([
                     f'interface vlan {source_vlan}',
                     f'ip address {intf_ip} {network.netmask}',
                     'no shut',
@@ -84,7 +105,7 @@ class Scan:
                     vrf_cmd = f'vrf member {vrf}'
                 else:
                     vrf_cmd = f'vrf forwarding {vrf}'
-                self.session.send_config_set([
+                session.send_config_set([
                     f'interface vlan {source_vlan}',
                     vrf_cmd,
                     f'ip address {intf_ip} {network.netmask}',
@@ -92,7 +113,6 @@ class Scan:
                     'do wr'
                 ])
 
-        hosts_r = network.hosts()
         for h in hosts_r:
             self.all_hosts.append(
                 {
@@ -154,18 +174,18 @@ class Scan:
                 scan(h1, session1)
             session1.disconnect()
 
-        start = time.perf_counter()
+        # start = time.perf_counter()
         mt(host_split, hosts_lists, threads=len(hosts_lists))
-        end = time.perf_counter()
-        print(f'finished in {round(end - start, 0)} seconds')
+        # end = time.perf_counter()
+        # print(f'finished in {round(end - start, 0)} seconds')
 
-        arps = self.session.send_command(f'show ip arp vlan {source_vlan}', use_textfsm=True)
+        arps = session.send_command(f'show ip arp vlan {source_vlan}', use_textfsm=True)
 
         # Creates Interface
         if create_intf:
-            self.session.send_config_set([f'no interface vlan {source_vlan}', 'do wr'])
+            session.send_config_set([f'no interface vlan {source_vlan}', 'do wr'])
 
-        self.session.disconnect()
+        session.disconnect()
 
         def append(arp):
             if arp['mac'].count('.') == 2:
