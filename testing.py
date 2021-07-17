@@ -1,7 +1,7 @@
 import os
 from scanner import Scan
 from general import Connection
-# from ipaddress import IPv4Network
+# from progressbar import ProgressBar
 # from pprint import pp
 
 username = os.getenv('USERNAME')
@@ -16,10 +16,12 @@ networks = [
 
 vlans = ['18', '20', '21', '22', '23', '192', '253', '2001', '2004']
 
+progress = 0
+
 with open('netscan.csv', 'w+') as file:
-    file.write(
-        'ip_address,mac_address,status,vlan\n'
-    )
+    length = len(networks) * len(vlans)
+    # bar = ProgressBar(max_value=length)
+    file.write('ip_address,mac_address,status,vlan\n')
     for vlan in vlans:
         for network in networks:
             n = network.split('.')
@@ -33,6 +35,6 @@ with open('netscan.csv', 'w+') as file:
                 except KeyError:
                     mac = ''
                 status = host['status']
-                file.write(
-                    f'{address},{mac},{status},{vlan}\n'
-                )
+                file.write(f'{address},{mac},{status},{vlan}\n')
+            progress += 1
+            # bar.update(progress)
