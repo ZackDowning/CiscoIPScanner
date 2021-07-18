@@ -177,13 +177,15 @@ class Scan:
         # Splits hosts list into mulitple smaller lists for for multiple asyncronous SSH/TELNET sessions
         hosts_lists = hosts_lists_parse(int(network.prefixlen), self.all_hosts)
 
-        self.list_num = 1
+        if progress_bar:
+            self.phase_num = 1
+            """Internal use only for progress bar numbers"""
 
         def host_split(host_list):
             session1 = connection.connection().session
             if progress_bar:
-                bar = ProgressBar(host_list, f'Phase {str(self.list_num)}: ').bar
-                self.list_num += 1
+                bar = ProgressBar(host_list, f'Phase {str(self.phase_num)}: ').bar
+                self.phase_num += 1
                 for h1 in bar:
                     scan(h1, session1)
             else:
