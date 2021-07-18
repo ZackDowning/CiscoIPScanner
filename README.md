@@ -19,8 +19,7 @@ General use case is for IP scanning of remote networks without remote connectivi
 ## Example Syntax
 Scan for single network and single VLAN with progress bar for each scan segment outputting results to CSV file
 ```
-from CiscoIPScanner.scanner import Scan
-from CiscoIPScanner.general import Connection
+from CiscoIPScanner import Scan, Connection
 import os
 
 username = os.getenv('USERNAME')
@@ -48,8 +47,7 @@ with open('netscan.csv', 'w+') as file:
   
 Scan for multiple networks within multiple VLANs with progress bar for each scan segment outputting results to CSV file
 ```
-from CiscoIPScanner.scanner import Scan
-from CiscoIPScanner.general import Connection
+from CiscoIPScanner import Scan, Connection
 import os
 
 username = os.getenv('USERNAME')

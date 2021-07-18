@@ -3,12 +3,20 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, wait
 from netmiko import ConnectHandler, ssh_exception, SSHDetect
 from icmplib import ping
+from CiscoIPScanner.exceptions import TemplatesNotFoundWithinPackage
 
 # Checks for TextFSM templates within single file bundle if code is frozen
 if getattr(sys, 'frozen', False):
     os.environ['NET_TEXTFSM'] = sys._MEIPASS
 else:
-    os.environ['NET_TEXTFSM'] = './templates'
+    for path in sys.path:
+        if path.__contains__('site-packages'):
+            if os.path.exists(f'{path}/CiscoIPScanner/templates'):
+                os.environ['NET_TEXTFSM'] = f'{path}/CiscoIPScanner/templates'
+            elif os.path.exists('./CiscoIPScanner/templates'):
+                os.environ['NET_TEXTFSM'] = './CiscoIPScanner/templates'
+            else:
+                raise TemplatesNotFoundWithinPackage
 
 
 def reachability(ip_address, count=4):

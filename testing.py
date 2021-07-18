@@ -1,8 +1,10 @@
 import os
-from scanner import Scan
-from general import Connection
+from CiscoIPScanner import Scan
+from CiscoIPScanner import Connection
 # from progressbar import progressbar
 # from pprint import pp
+
+testing = os.environ['NET_TEXTFSM']
 
 username = os.getenv('USERNAME')
 password = os.getenv('PASSWORD')

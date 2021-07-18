@@ -44,3 +44,8 @@ class InterfaceIPAddressNotInNetwork(Exception):
 
 class VlanNotInVlanDB(Exception):
     pass
+
+
+class TemplatesNotFoundWithinPackage(Exception):
+    pass
+

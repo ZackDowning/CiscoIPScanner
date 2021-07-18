@@ -1,7 +1,10 @@
 from ipaddress import IPv4Network, AddressValueError
-from general import mt
-import exceptions as e
-from address_validator import ipv4
+from CiscoIPScanner.general import mt
+from CiscoIPScanner.exceptions import (
+    InvalidVRF, NoVRFSpecifiedWithIntInVRF, InvalidIntfIPAddress, InvalidDeviceType, NoIntfIPSpecified,
+    NoNXOSIntfIPSpecified, SubnetTooLarge, InvalidVlanID, InvalidNetworkID, InvalidInterfaceIP,
+    InterfaceIPAddressNotInNetwork, VlanNotInVlanDB, TemplatesNotFoundWithinPackage)
+from CiscoIPScanner.address_validator import ipv4
 from progressbar import progressbar
 # import time
 
@@ -49,7 +52,7 @@ def hosts_lists_parse(prefix, all_hosts):
             all_hosts[408:459], all_hosts[459:510]
         ]
     else:
-        raise e.SubnetTooLarge
+        raise SubnetTooLarge
 
 
 class ProgressBar:
@@ -65,35 +68,37 @@ class Scan:
 
         # Intf IP required if creating interface
         if create_intf and intf_ip is None:
-            raise e.NoIntfIPSpecified
+            raise NoIntfIPSpecified
 
         # Intf IP required if NX-OS
         if devicetype == 'cisco_nxos' and intf_ip is None:
-            raise e.NoNXOSIntfIPSpecified
+            raise NoNXOSIntfIPSpecified
 
         # Checks VLAN to make sure valid VLAN ID within extended VLAN range and not within reserved VLAN ID range
         if int(source_vlan) not in range(1, 4095) or int(source_vlan) in range(1002, 1006):
-            raise e.InvalidVlanID
+            raise InvalidVlanID
 
         # Checks to make sure network is valid
         try:
             network = IPv4Network(network)
-            hosts_r = network.hosts()
         except AddressValueError:
-            raise e.InvalidNetworkID
+            raise InvalidNetworkID
 
         # Checks to make sure interface IP address is valid IP address and IP address in within the specific network
         if intf_ip is not None:
             if not ipv4(intf_ip):
-                raise e.InvalidInterfaceIP
-            if not any(intf_ip == str(h1) for h1 in hosts_r):
-                raise e.InterfaceIPAddressNotInNetwork
+                raise InvalidInterfaceIP
+            if not any(intf_ip == str(h1) for h1 in network.hosts()):
+                raise InterfaceIPAddressNotInNetwork
         
         # Checks for source vlan in device VLAN database
         session = connection.connection().session
-        vlan_db = session.send_command('show vlan brief', use_textfsm=True)
+        try:
+            vlan_db = session.send_command('show vlan brief', use_textfsm=True)
+        except ValueError:
+            raise TemplatesNotFoundWithinPackage
         if not any(source_vlan == v1['vlan_id'] for v1 in vlan_db):
-            raise e.VlanNotInVlanDB
+            raise VlanNotInVlanDB
 
         # Creates Interface
         if create_intf and intf_ip is not None:
@@ -118,7 +123,7 @@ class Scan:
         # Creating list of dictionaries for hosts for later sorted of unordered output data from scan
         self.all_hosts = []
         """All hosts in specified subnet with dictionaries including reachability info, ip address, and mac address"""
-        for h in hosts_r:
+        for h in network.hosts():
             self.all_hosts.append(
                 {
                     'address': str(h)
@@ -143,7 +148,7 @@ class Scan:
                 else:
                     cmd = f'ping {ip_address} vrf {vrf} count {count} timeout {timeout} source {intf_ip}'
             else:
-                raise e.InvalidDeviceType
+                raise InvalidDeviceType
 
             cmd_output = conn.send_command(cmd)
             
@@ -152,18 +157,18 @@ class Scan:
                 if devicetype == 'cisco_ios':
                     if cmd_output.__contains__(
                             'Invalid source interface - Interface vrf does not match the vrf used for ping'):
-                        raise e.NoVRFSpecifiedWithIntInVRF
+                        raise NoVRFSpecifiedWithIntInVRF
                     if cmd_output.__contains__('does not exist'):
-                        raise e.InvalidVRF
+                        raise InvalidVRF
                     if cmd_output.__contains__('input detected'):
-                        raise e.InvalidIntfIPAddress
+                        raise InvalidIntfIPAddress
                 else:
                     if cmd_output.__contains__('bind to address'):
-                        raise e.NoVRFSpecifiedWithIntInVRF
+                        raise NoVRFSpecifiedWithIntInVRF
                     if cmd_output.__contains__('does not exist'):
-                        raise e.InvalidVRF
+                        raise InvalidVRF
                     if cmd_output.__contains__('Invalid host/interface'):
-                        raise e.InvalidIntfIPAddress
+                        raise InvalidIntfIPAddress
             else:
                 # Checks if device recieved ping echo then appending IP address to list if non-0 value
                 if devicetype == 'cisco_ios':
