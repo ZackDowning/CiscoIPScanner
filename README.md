@@ -8,6 +8,7 @@ General use case is for IP scanning of remote networks without remote connectivi
   - netmiko
   - progressbar2
   - icmplib
+- CiscoIPScanner package within Python 'site-packages' directory
 - Cisco L3 switch running IOS, IOS-XE, or NX-OS *(Adding router support later)*
 - Up to 11 available VTY lines on switch all configured for either SSH or TELNET
 - Credentials with privledged (level 15) access to said switch unless new SVI is not necessary for scan *(See more details below)* Otherwise just credentials for read access
