@@ -86,7 +86,7 @@ class Scan:
         if intf_ip is not None:
             if not ipv4(intf_ip):
                 raise e.InvalidInterfaceIP
-            if not any(intf_ip == h1 for h1 in hosts_r):
+            if not any(intf_ip == str(h1) for h1 in hosts_r):
                 raise e.InterfaceIPAddressNotInNetwork
         
         # Checks for source vlan in device VLAN database
