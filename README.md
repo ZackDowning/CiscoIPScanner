@@ -1,5 +1,5 @@
 # CiscoIPScanner
-IPv4 Subnet MAC Address and reachability scanner from Cisco IOS, IOS-XE, and NX-OS devices.  
+IPv4 subnet scanner for MAC addresses and reachability from Cisco IOS(-XE) and NX-OS devices.  
   
 General use case is for IP scanning of remote networks without remote connectivity to a device within that network or scanning for multiple networks within one or more VLANs.  
 ## Requirements
