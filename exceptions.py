@@ -6,7 +6,7 @@ class NoVRFSpecifiedWithIntInVRF(Exception):
     pass
 
 
-class InvalidIntf(Exception):
+class InvalidIntfIPAddress(Exception):
     pass
 
 

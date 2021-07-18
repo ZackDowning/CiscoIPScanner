@@ -5,6 +5,9 @@ from address_validator import ipv4
 from progressbar import progressbar
 # import time
 
+# TODO: Add router support
+# TODO: Add check to make sure SVI
+
 
 def hosts_lists_parse(prefix, all_hosts):
     """Splits host list into seperate lists for concurrent SSH or TELNET sessions for faster IP scan\n
@@ -153,14 +156,14 @@ class Scan:
                     if cmd_output.__contains__('does not exist'):
                         raise e.InvalidVRF
                     if cmd_output.__contains__('input detected'):
-                        raise e.InvalidIntf
+                        raise e.InvalidIntfIPAddress
                 else:
                     if cmd_output.__contains__('bind to address'):
                         raise e.NoVRFSpecifiedWithIntInVRF
                     if cmd_output.__contains__('does not exist'):
                         raise e.InvalidVRF
                     if cmd_output.__contains__('Invalid host/interface'):
-                        raise e.InvalidIntf
+                        raise e.InvalidIntfIPAddress
             else:
                 # Checks if device recieved ping echo then appending IP address to list if non-0 value
                 if devicetype == 'cisco_ios':
