@@ -1,8 +1,13 @@
 # CiscoIPScanner
-IPv4 Subnet MAC Address and reachability scanner from Cisco IOS, IOS-XE, and NX-OS devices.  
+IPv4 subnet scanner for MAC addresses and reachability from Cisco IOS(-XE) and NX-OS devices.  
   
 General use case is for IP scanning of remote networks without remote connectivity to a device within that network or scanning for multiple networks within one or more VLANs.  
 ## Requirements
+- Python3.9 *(May work with other versions; only tested with 3.9)*
+- Packages:
+  - netmiko
+  - progressbar2
+  - icmplib
 - Cisco L3 switch running IOS, IOS-XE, or NX-OS *(Adding router support later)*
 - Up to 11 available VTY lines on switch all configured for either SSH or TELNET
 - Credentials with privledged (level 15) access to said switch unless new SVI is not necessary for scan *(See more details below)* Otherwise just credentials for read access
